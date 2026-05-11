@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>courtdesk-nigeria</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+<!-- ============================================================ -->
+<!-- index.html — paste this into your project's index.html      -->
+<!-- ============================================================ -->
+<!DOCTYPE html>
+<html lang="en-NG">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#c9a84c" />
+    <meta name="description" content="CourtDesk Nigeria — The litigation CMS built for Nigerian law firms. Track matters, court runners, filing proofs, WhatsApp client updates and ₦ billing." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CourtDesk" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
+
+    <!-- Fonts preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- iOS splash screens (optional — generate at progressier.com) -->
+    <!-- <link rel="apple-touch-startup-image" href="/splash/splash-1170x2532.png" media="..."> -->
+
+    <title>CourtDesk Nigeria</title>
+
+    <style>
+      /* Prevent flash of unstyled content */
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        background: #040c18;
+        min-height: 100vh;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Safe area padding for iPhone notch */
+      #root {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then(reg => console.log('[CourtDesk] SW registered:', reg.scope))
+            .catch(err => console.warn('[CourtDesk] SW registration failed:', err));
+        });
+      }
+    </script>
+  </body>
+</html>
+
+
+<!-- ============================================================ -->
+<!-- offline.html — create this as public/offline.html            -->
+<!-- ============================================================ -->
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CourtDesk — You are offline</title>
+  <style>
+    body { margin:0; background:#040c18; color:#e8dcc8; font-family:Georgia,serif;
+           display:flex; align-items:center; justify-content:center; min-height:100vh; text-align:center; }
+    h1 { font-size:28px; color:#c9a84c; margin-bottom:12px; }
+    p { color:#4a6a8a; max-width:300px; line-height:1.6; }
+    button { background:#c9a84c; border:none; border-radius:10px; padding:12px 24px;
+             color:#040c18; font-weight:700; font-size:15px; cursor:pointer; margin-top:20px; }
+  </style>
+</head>
+<body>
+  <div>
+    <div style="font-size:48px;margin-bottom:16px">⚖</div>
+    <h1>You are offline</h1>
+    <p>CourtDesk Nigeria requires an internet connection for some features. Your data is saved locally and will sync when you reconnect.</p>
+    <button onclick="window.location.reload()">Try Again</button>
+  </div>
+</body>
+</html>
+-->
