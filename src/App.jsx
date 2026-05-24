@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+import { db } from "./db";
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
@@ -81,22 +83,30 @@ const proofIcon = {"Filing Receipt":"🧾","Court Stamp":"📮","Proof of Servic
 const isMobile = () => window.innerWidth < 768;
 
 // ─── PERSISTENT STATE HOOK ────────────────────────────────────────────────────
-function usePersistedState(key, seed) {
+function useSupabaseData(table, seed, mapper) {
   const [data, setData] = useState(seed);
   const [loaded, setLoaded] = useState(false);
-  useEffect(() => { Store.get(key).then(saved => { if(saved&&Array.isArray(saved)&&saved.length>0) setData(saved); setLoaded(true); }); }, [key]);
-  const update = useCallback(async val => { const next = typeof val==="function"?val(data):val; setData(next); await Store.set(key,next); }, [key,data]);
-  return [data, update, loaded];
-}
 
-// ─── WHATSAPP / SMS ───────────────────────────────────────────────────────────
-async function sendWhatsApp(to, message) {
-  await new Promise(r=>setTimeout(r,1200));
-  return "DEMO_WA_"+Date.now();
-}
-async function sendSMS(to, message) {
-  await new Promise(r=>setTimeout(r,900));
-  return "DEMO_SMS_"+Date.now();
+  useEffect(() => {
+    db[table].getAll()
+      .then(rows => {
+        if (rows && rows.length > 0) {
+          setData(mapper ? rows.map(mapper) : rows);
+        }
+        setLoaded(true);
+      })
+      .catch(() => {
+        // Fall back to seed data if Supabase not connected
+        setLoaded(true);
+      });
+  }, [table]);
+
+  const update = useCallback(async (val) => {
+    const next = typeof val === "function" ? val(data) : val;
+    setData(next);
+  }, [data]);
+
+  return [data, update, loaded];
 }
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
@@ -183,17 +193,34 @@ function LoginScreen({onLogin}) {
   const demo = role==="lawyer" ? CONFIG.DEMO_LAWYER : CONFIG.DEMO_RUNNER;
 
   const handleLogin = async () => {
-    setError(""); setLoading(true);
-    await new Promise(r=>setTimeout(r,800));
-    if (email===CONFIG.DEMO_LAWYER.email && password===CONFIG.DEMO_LAWYER.password) {
+  setError(""); setLoading(true);
+  try {
+    // Try Supabase Auth first
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    const role = email.includes("runner") ? "runner" : "lawyer";
+    onLogin({
+      email: data.user.email,
+      name: data.user.user_metadata?.name || email,
+      role,
+    });
+  } catch (err) {
+    // Fall back to demo credentials
+    if (email===CONFIG.DEMO_LAWYER.email && 
+        password===CONFIG.DEMO_LAWYER.password) {
       onLogin(CONFIG.DEMO_LAWYER); setLoading(false); return;
     }
-    if (email===CONFIG.DEMO_RUNNER.email && password===CONFIG.DEMO_RUNNER.password) {
+    if (email===CONFIG.DEMO_RUNNER.email && 
+        password===CONFIG.DEMO_RUNNER.password) {
       onLogin(CONFIG.DEMO_RUNNER); setLoading(false); return;
     }
-    setError("Invalid credentials. Use the demo credentials below.");
-    setLoading(false);
-  };
+    setError("Invalid email or password. Please try again.");
+  }
+  setLoading(false);
+};
 
   return (
     <div style={{minHeight:"100vh",background:"#040c18",display:"flex",fontFamily:"Georgia,serif"}}>
@@ -750,13 +777,12 @@ function DesktopLawyers({lawyers,setLawyers}){const [selected,setSelected]=useSt
 //  ROOT APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [matters, setMatters, mLoaded] = usePersistedState("cd_matters_v3", SEED_MATTERS);
-  const [clients, setClients] = usePersistedState("cd_clients_v3", SEED_CLIENTS);
-  const [tasks, setTasks] = usePersistedState("cd_tasks_v3", SEED_TASKS);
-  const [invoices, setInvoices] = usePersistedState("cd_invoices_v3", SEED_INVOICES);
-  const [proofs, setProofs] = usePersistedState("cd_proofs_v3", SEED_PROOFS);
-  const [lawyers, setLawyers] = usePersistedState("cd_lawyers_v3", SEED_LAWYERS);
+const [matters, setMatters, mLoaded] = useSupabaseData("matters", SEED_MATTERS);
+const [clients, setClients] = useSupabaseData("clients", SEED_CLIENTS);
+const [tasks, setTasks] = useSupabaseData("tasks", SEED_TASKS);
+const [invoices, setInvoices] = useSupabaseData("invoices", SEED_INVOICES);
+const [proofs, setProofs] = useSupabaseData("proofs", SEED_PROOFS);
+const [lawyers, setLawyers] = useSupabaseData("lawyers", SEED_LAWYERS);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -766,7 +792,11 @@ export default function App() {
     Store.get("cd_session_v3").then(s => { if(s?.email) setUser(s); });
   }, []);
 
-  const handleLogin = async (u) => { await Store.set("cd_session_v3", u); setUser(u); };
+  const handleLogin = async (u) => {
+  await Store.set("cd_session_v3", u);
+  setUser(u);
+  await db.audit.log("LOGIN", `User logged in as ${u.role}`, u);
+};
   const handleLogout = async () => { await Store.set("cd_session_v3", null); setUser(null); };
 
   if (!user) return <LoginScreen onLogin={handleLogin} />;
