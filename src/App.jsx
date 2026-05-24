@@ -83,22 +83,18 @@ const proofIcon = {"Filing Receipt":"🧾","Court Stamp":"📮","Proof of Servic
 const isMobile = () => window.innerWidth < 768;
 
 // ─── PERSISTENT STATE HOOK ────────────────────────────────────────────────────
-function useSupabaseData(table, seed, mapper) {
+function useSupabaseData(table, seed) {
   const [data, setData] = useState(seed);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (!db[table]) { setLoaded(true); return; }
     db[table].getAll()
       .then(rows => {
-        if (rows && rows.length > 0) {
-          setData(mapper ? rows.map(mapper) : rows);
-        }
+        if (rows && rows.length > 0) setData(rows);
         setLoaded(true);
       })
-      .catch(() => {
-        // Fall back to seed data if Supabase not connected
-        setLoaded(true);
-      });
+      .catch(() => setLoaded(true));
   }, [table]);
 
   const update = useCallback(async (val) => {
@@ -795,7 +791,6 @@ const [lawyers, setLawyers] = useSupabaseData("lawyers", SEED_LAWYERS);
   const handleLogin = async (u) => {
   await Store.set("cd_session_v3", u);
   setUser(u);
-  await db.audit.log("LOGIN", `User logged in as ${u.role}`, u);
 };
   const handleLogout = async () => { await Store.set("cd_session_v3", null); setUser(null); };
 
