@@ -773,12 +773,13 @@ function DesktopLawyers({lawyers,setLawyers}){const [selected,setSelected]=useSt
 //  ROOT APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
-const [matters, setMatters, mLoaded] = useSupabaseData("matters", SEED_MATTERS);
-const [clients, setClients] = useSupabaseData("clients", SEED_CLIENTS);
-const [tasks, setTasks] = useSupabaseData("tasks", SEED_TASKS);
-const [invoices, setInvoices] = useSupabaseData("invoices", SEED_INVOICES);
-const [proofs, setProofs] = useSupabaseData("proofs", SEED_PROOFS);
-const [lawyers, setLawyers] = useSupabaseData("lawyers", SEED_LAWYERS);
+  const [user, setUser] = useState(null);  // ← ADD THIS LINE
+  const [matters, setMatters, mLoaded] = useSupabaseData("matters", SEED_MATTERS);
+  const [clients, setClients] = useSupabaseData("clients", SEED_CLIENTS);
+  const [tasks, setTasks] = useSupabaseData("tasks", SEED_TASKS);
+  const [invoices, setInvoices] = useSupabaseData("invoices", SEED_INVOICES);
+  const [proofs, setProofs] = useSupabaseData("proofs", SEED_PROOFS);
+  const [lawyers, setLawyers] = useSupabaseData("lawyers", SEED_LAWYERS);
 
   useEffect(() => {
     const link = document.createElement("link");
